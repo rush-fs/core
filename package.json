@@ -1,6 +1,6 @@
 {
   "name": "@rush-fs/core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "High-performance drop-in replacement for Node.js fs module, powered by Rust",
   "main": "index.js",
   "repository": {
