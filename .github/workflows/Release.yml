@@ -12,7 +12,12 @@ env:
   CARGO_INCREMENTAL: '1'
   NODE_VERSION: '20'
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g. 0.1.1). Leave empty to use current package.json version.'
+        required: false
+        type: string
   push:
     tags:
       - 'v*'
@@ -107,6 +112,9 @@ jobs:
       - build
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
       - name: Install pnpm
         uses: pnpm/action-setup@v4
       - name: Setup node
@@ -116,6 +124,29 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install
+      - name: Bump version (if input provided)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.version != '' }}
+        run: |
+          VERSION="${{ inputs.version }}"
+          echo "Bumping version to $VERSION"
+          # Update package.json
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version = '$VERSION';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+            console.log('package.json →', pkg.version);
+          "
+          # Update Cargo.toml
+          sed -i "s/^version = .*/version = \"$VERSION\"/" Cargo.toml
+          echo "Cargo.toml → $(grep '^version' Cargo.toml)"
+          # Commit and tag
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json Cargo.toml
+          git commit -m "chore: bump version to $VERSION [skip ci]"
+          git tag "v$VERSION"
+          git push origin "v$VERSION"
       - name: Create npm dirs
         run: pnpm napi create-npm-dirs
       - name: Download all artifacts
