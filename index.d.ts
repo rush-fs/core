@@ -110,6 +110,11 @@ export declare function globSync(
   options?: GlobOptions | undefined | null,
 ): Array<string> | Array<Dirent>
 
+export interface LineRange {
+  from: number
+  to: number
+}
+
 export declare function link(existingPath: string, newPath: string): Promise<unknown>
 
 export declare function linkSync(existingPath: string, newPath: string): void
@@ -169,6 +174,7 @@ export declare function readFile(path: string, options?: string | ReadFileOption
 export interface ReadFileOptions {
   encoding?: string
   flag?: string
+  lines?: LineRange
 }
 
 export declare function readFileSync(

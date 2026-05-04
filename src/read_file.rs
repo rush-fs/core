@@ -61,9 +61,17 @@ fn base64_encode(data: &[u8], url_safe: bool) -> String {
 
 #[napi(object)]
 #[derive(Clone)]
+pub struct LineRange {
+  pub from: u32,
+  pub to: u32,
+}
+
+#[napi(object)]
+#[derive(Clone)]
 pub struct ReadFileOptions {
   pub encoding: Option<String>,
   pub flag: Option<String>,
+  pub lines: Option<LineRange>,
 }
 
 fn normalize_read_file_options(
@@ -73,12 +81,80 @@ fn normalize_read_file_options(
     Some(Either::A(encoding)) => ReadFileOptions {
       encoding: Some(encoding),
       flag: None,
+      lines: None,
     },
     Some(Either::B(opts)) => opts,
     None => ReadFileOptions {
       encoding: None,
       flag: None,
+      lines: None,
     },
+  }
+}
+
+fn read_file_with_lines(
+  path: &Path,
+  open_opts: &mut fs::OpenOptions,
+  range: LineRange,
+  encoding: Option<&str>,
+) -> Result<String> {
+  use std::io::{BufRead, BufReader};
+
+  if range.from < 1 || range.to < range.from {
+    return Ok(String::new());
+  }
+
+  let file = open_opts.open(path).map_err(|e| {
+    if e.kind() == std::io::ErrorKind::NotFound {
+      Error::from_reason(format!(
+        "ENOENT: no such file or directory, open '{}'",
+        path.to_string_lossy()
+      ))
+    } else if e.kind() == std::io::ErrorKind::PermissionDenied {
+      Error::from_reason(format!(
+        "EACCES: permission denied, open '{}'",
+        path.to_string_lossy()
+      ))
+    } else if e.kind() == std::io::ErrorKind::AlreadyExists {
+      Error::from_reason(format!(
+        "EEXIST: file already exists, open '{}'",
+        path.to_string_lossy()
+      ))
+    } else {
+      Error::from_reason(e.to_string())
+    }
+  })?;
+
+  let reader = BufReader::with_capacity(64 * 1024, file);
+  let mut result = String::new();
+  let mut current_line: u32 = 0;
+
+  for line_result in reader.lines() {
+    let line = line_result.map_err(|e| Error::from_reason(e.to_string()))?;
+    current_line += 1;
+
+    if current_line > range.to {
+      break;
+    }
+
+    if current_line >= range.from {
+      if !result.is_empty() {
+        result.push('\n');
+      }
+      result.push_str(&line);
+    }
+  }
+
+  // Apply encoding transformation if needed
+  if encoding.is_some() && encoding != Some("utf8") && encoding != Some("utf-8") {
+    let bytes = result.into_bytes();
+    let decoded = decode_data(bytes, encoding)?;
+    match decoded {
+      Either::A(s) => Ok(s),
+      Either::B(_) => Ok(String::new()),
+    }
+  } else {
+    Ok(result)
   }
 }
 
@@ -142,6 +218,18 @@ fn read_file_impl(
       Error::from_reason(e.to_string())
     }
   })?;
+
+  // If lines option is specified with a text encoding, use streaming line-by-line reading
+  // to avoid loading the entire file into memory. Buffer mode (no encoding) ignores lines.
+  if let (Some(lines), Some(_)) = (&opts.lines, &opts.encoding) {
+    let contents = read_file_with_lines(
+      path,
+      &mut open_opts,
+      lines.clone(),
+      opts.encoding.as_deref(),
+    )?;
+    return Ok(Either::A(contents));
+  }
 
   use std::io::Read;
   let mut data = Vec::new();

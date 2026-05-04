@@ -1,7 +1,7 @@
 import test from 'ava'
 import { cpSync, cp } from '../index.js'
 import * as nodeFs from 'node:fs'
-import { writeFileSync, readFileSync, existsSync, mkdirSync, symlinkSync, readdirSync } from 'node:fs'
+import { writeFileSync, readFileSync, existsSync, mkdirSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 
