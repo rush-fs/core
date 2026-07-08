@@ -31,6 +31,27 @@ Return type `Stats` is the same as `stat`; when `path` is a symlink, the returne
 
 Single syscall; same order as `stat`. On par with Node.js (~1.2x in micro-benchmarks). See [Benchmarks](/benchmarks).
 
+### Local scale report
+
+<!-- rush-fs-perf:start lstat -->
+
+_Generated from local performance reports. Do not edit this block by hand._
+
+- Runtime: v22.22.0 on darwin/arm64
+- Samples: 2 warmup runs, 10 measured runs
+- Aggregation: trimmed mean for wall-clock time; average per-run memory delta for RSS
+
+| Scale | Fixture | Node.js | Rush-FS | Ratio | Node RSS | Rush-FS RSS |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| single-file | - | 0.05 ms | 0.13 ms | 2.62x slower | 30.4 KB | 6.4 KB |
+| directory | - | 0.14 ms | 0.06 ms | 2.56x faster | 0 B | 3.2 KB |
+| symlink | - | 0.04 ms | 0.03 ms | 1.57x faster | 0 B | 0 B |
+| batch-128-files | - | 1.48 ms | 1.34 ms | 1.10x faster | 8.0 KB | 0 B |
+
+<!-- rush-fs-perf:end lstat -->
+
 ## Notes
 
 - **Symlinks**: Use `lstat` to detect and inspect symlinks; use `stat` to get the resolved file’s stats.
+- **Known gap**: Missing-path errors currently have Node-like messages, but do not expose Node-style `code`, `path`, and `syscall` fields yet.
+- **Unsupported Node options**: `bigint`, `throwIfNoEntry`, `Buffer` paths, and `URL` paths are not part of the current Rush-FS `lstat` surface.
