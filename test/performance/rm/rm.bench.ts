@@ -10,12 +10,24 @@ const scales = process.env.RUSH_FS_EXTREME
 async function main(): Promise<void> {
   for (const scale of scales) {
     const fixture = await createScaleFixture('perf-rm', scale)
-    const nodeRoot = await copyFixture(fixture.root, 'perf-node-rm')
-    const rushRoot = await copyFixture(fixture.root, 'perf-rush-rm')
+    let nodeRoot = ''
+    let rushRoot = ''
     try {
-      const node = await measure('node rm recursive', () => nodeFs.rm(nodeRoot, { recursive: true }))
-      const rush = await measure('rush rm recursive', () => rm(rushRoot, { recursive: true, concurrency: 4 }))
-      printComparison('rm', scale, node, rush)
+      const node = await measure('node rm recursive', () => nodeFs.rm(nodeRoot, { recursive: true }), {
+        beforeEach: ({ index, warmup }) =>
+          copyFixture(fixture.root, `perf-node-rm-${warmup ? 'warmup' : 'sample'}-${index}`).then((root) => {
+            nodeRoot = root
+          }),
+        afterEach: () => removeFixture(nodeRoot),
+      })
+      const rush = await measure('rush rm recursive', () => rm(rushRoot, { recursive: true, concurrency: 4 }), {
+        beforeEach: ({ index, warmup }) =>
+          copyFixture(fixture.root, `perf-rush-rm-${warmup ? 'warmup' : 'sample'}-${index}`).then((root) => {
+            rushRoot = root
+          }),
+        afterEach: () => removeFixture(rushRoot),
+      })
+      printComparison('rm', scale, node, rush, fixture)
     } finally {
       await removeFixture(fixture.root)
       await removeFixture(nodeRoot)
@@ -24,7 +36,4 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((error: unknown) => {
-  console.error(error)
-  process.exitCode = 1
-})
+module.exports = { main }

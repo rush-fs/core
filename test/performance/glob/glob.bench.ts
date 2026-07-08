@@ -21,14 +21,11 @@ async function main(): Promise<void> {
     try {
       const node = await measure('node glob recursive', () => collectNodeGlob(fixture.root))
       const rush = await measure('rush glob recursive', () => glob('**/*.txt', { cwd: fixture.root }))
-      printComparison('glob', scale, node, rush)
+      printComparison('glob', scale, node, rush, fixture)
     } finally {
       await removeFixture(fixture.root)
     }
   }
 }
 
-main().catch((error: unknown) => {
-  console.error(error)
-  process.exitCode = 1
-})
+module.exports = { main }
