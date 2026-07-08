@@ -33,3 +33,5 @@ Single syscall; on par with Node.js. See [Benchmarks](/benchmarks).
 
 - **Filesystems**: Hard links may not be supported (e.g. FAT, some network drives); same as Node.js.
 - **Directories**: Typically not allowed for directories; use symlinks for directory “aliases”.
+- **Known gap**: Missing-source and existing-destination errors currently have Node-like messages, but do not expose Node-style `code`, `path`, `dest`, and `syscall` fields yet.
+- **Unsupported Node path inputs**: `Buffer` paths and `URL` paths are not part of the current Rush-FS `link` surface.
