@@ -63,7 +63,7 @@ async function run() {
     .readdirSync(performanceRoot, { withFileTypes: true })
     .filter((entry) => entry.isDirectory() && !entry.name.startsWith('_'))
     .map((entry) => entry.name)
-    .filter((name) => !options.filter || name.includes(options.filter))
+    .filter((name) => !options.filter || name.toLowerCase().includes(options.filter))
 
   if (apiDirs.length === 0) {
     console.log(`No performance tests found${options.filter ? ` for "${options.filter}"` : ''}.`)

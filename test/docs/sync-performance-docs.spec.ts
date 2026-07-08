@@ -1,6 +1,13 @@
 import test from 'ava'
+import * as fs from 'node:fs'
+import * as os from 'node:os'
+import * as path from 'node:path'
 
-import { renderPerformanceSection, replacePerformanceSection } from '../../scripts/sync-performance-docs.mjs'
+import {
+  renderPerformanceSection,
+  replacePerformanceSection,
+  syncPerformanceDoc,
+} from '../../scripts/sync-performance-docs.mjs'
 
 const report = {
   generatedAt: '2026-07-09T00:00:00.000Z',
@@ -34,6 +41,18 @@ const report = {
   ],
 }
 
+const readFileReport = {
+  ...report,
+  comparisons: [
+    {
+      ...report.comparisons[0],
+      api: 'readFile',
+      scale: 'small-utf8',
+      fixture: undefined,
+    },
+  ],
+}
+
 test('renderPerformanceSection creates a markdown table for an API', (t) => {
   const markdown = renderPerformanceSection(report, 'readdir')
 
@@ -56,4 +75,29 @@ test('replacePerformanceSection updates only the marker block', (t) => {
   t.true(next.startsWith('before\n<!-- rush-fs-perf:start readdir -->'))
   t.true(next.endsWith('<!-- rush-fs-perf:end readdir -->\nafter'))
   t.false(next.includes('old generated content'))
+})
+
+test('syncPerformanceDoc maps readFile reports to read-file docs', (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'rush-fs-sync-perf-docs-'))
+  t.teardown(() => fs.rmSync(root, { recursive: true, force: true }))
+  const docsRoot = path.join(root, 'api')
+  fs.mkdirSync(docsRoot, { recursive: true })
+  const reportPath = path.join(root, 'readFile.json')
+  const docPath = path.join(docsRoot, 'read-file.mdx')
+  fs.writeFileSync(reportPath, JSON.stringify(readFileReport))
+  fs.writeFileSync(
+    docPath,
+    [
+      'before',
+      '<!-- rush-fs-perf:start readFile -->',
+      'old generated content',
+      '<!-- rush-fs-perf:end readFile -->',
+      'after',
+    ].join('\n'),
+  )
+
+  t.is(syncPerformanceDoc({ api: 'readFile', reportPath, docsRoot }), docPath)
+  const content = fs.readFileSync(docPath, 'utf8')
+  t.true(content.includes('| small-utf8 | - | 1.00 ms | 2.00 ms | 2.00x slower | 1.0 KB | 2.0 KB |'))
+  t.false(content.includes('old generated content'))
 })

@@ -4,7 +4,10 @@ import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const apiDocNames = new Map([['readdir', 'readdir.mdx']])
+const apiDocNames = new Map([
+  ['readFile', 'read-file.mdx'],
+  ['readdir', 'readdir.mdx'],
+])
 
 function formatMs(value) {
   return `${value.toFixed(2)} ms`
