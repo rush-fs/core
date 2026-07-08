@@ -34,4 +34,8 @@ Single syscall; on par with Node.js. See [Benchmarks](/benchmarks).
 ## Notes
 
 - **Windows**: Use `type: 'dir'` for directory symlinks, `'file'` for file symlinks, `'junction'` for directory junctions when applicable.
+- **Windows privileges**: Creating symlinks can require developer mode or elevated privileges depending on the environment.
 - **Relative target**: Stored as-is; resolution is at read time (e.g. via `readlink`/`realpath`).
+- **Known gap**: Filesystem errors currently have Node-like messages, but do not expose Node-style `code`, `path`, `dest`, and `syscall` fields yet.
+- **Current type gap**: The TypeScript surface currently accepts any string for `type`; Node documents `file`, `dir`, and `junction`.
+- **Unsupported Node path inputs**: `Buffer` paths and `URL` paths are not part of the current Rush-FS `symlink` surface.
