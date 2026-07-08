@@ -19,8 +19,8 @@ await chown('./file', uid, gid)
 | Argument | Type   | Description |
 | -------- | ------ | ----------- |
 | `path`   | string | File or directory path. |
-| `uid`    | number | User id. |
-| `gid`    | number | Group id. |
+| `uid`    | number | Numeric user id. |
+| `gid`    | number | Numeric group id. |
 
 ### `chownSync(path, uid, gid)`
 
@@ -34,3 +34,6 @@ Single syscall; on par with Node.js. See [Benchmarks](/benchmarks).
 
 - **Windows**: Typically requires elevated privileges or has no effect; same as Node.js.
 - **Root**: Changing ownership usually requires root/sudo on Unix.
+- **Current non-Unix gap**: Rush-FS currently validates path existence but does not fully mirror platform ownership mutation semantics outside Unix.
+- **Known gap**: Missing-path and permission errors currently have Node-like messages, but do not expose Node-style `code`, `path`, and `syscall` fields yet.
+- **Unsupported Node path inputs**: `Buffer` paths and `URL` paths are not part of the current Rush-FS `chown` surface.
