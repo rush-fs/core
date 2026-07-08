@@ -4,7 +4,7 @@ env:
   APP_NAME: rush-fs
   MACOSX_DEPLOYMENT_TARGET: '10.13'
   CARGO_INCREMENTAL: '1'
-  NODE_VERSION: '20'
+  NODE_VERSION: '22'
 # CI：PR 与 main 的检查（lint / build / test），不包含发布
 'on':
   push:
@@ -70,7 +70,7 @@ jobs:
           - host: macos-latest
             target: aarch64-apple-darwin
             build: pnpm build --target aarch64-apple-darwin
-    name: stable - ${{ matrix.settings.target }} - node@22
+    name: stable - ${{ matrix.settings.target }} - node@${{ env.NODE_VERSION }}
     runs-on: ${{ matrix.settings.host }}
     steps:
       - uses: actions/checkout@v4
@@ -148,8 +148,8 @@ jobs:
             target: x86_64-apple-darwin
             architecture: x64
         node:
-          - '20'
           - '22'
+          - '24'
     runs-on: ${{ matrix.settings.host }}
     steps:
       - uses: actions/checkout@v4
@@ -173,6 +173,8 @@ jobs:
         shell: bash
       - name: Test bindings
         run: pnpm test
+      - name: Test Node fs conformance
+        run: pnpm test:conformance
   test-linux-binding:
     name: Test ${{ matrix.target }} - node@${{ matrix.node }}
     needs:
@@ -183,8 +185,8 @@ jobs:
         target:
           - x86_64-unknown-linux-gnu
         node:
-          - '20'
           - '22'
+          - '24'
     runs-on: ${{ contains(matrix.target, 'aarch64') && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v4
@@ -244,3 +246,13 @@ jobs:
             --platform "${{ steps.docker.outputs.PLATFORM }}" \
             "${{ steps.docker.outputs.IMAGE }}" \
             sh -lc "corepack enable && pnpm test"
+      - name: Test Node fs conformance
+        run: |
+          docker run --rm \
+            -e CI=true \
+            -e GITHUB_ACTIONS=true \
+            -v "${{ github.workspace }}:${{ github.workspace }}" \
+            -w "${{ github.workspace }}" \
+            --platform "${{ steps.docker.outputs.PLATFORM }}" \
+            "${{ steps.docker.outputs.IMAGE }}" \
+            sh -lc "corepack enable && pnpm test:conformance"
