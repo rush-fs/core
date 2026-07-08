@@ -38,7 +38,27 @@ From repo benchmarks (`pnpm build && pnpm bench`):
 
 On par with Node.js; small N-API overhead per call.
 
+### Local scale report
+
+<!-- rush-fs-perf:start stat -->
+
+_Generated from local performance reports. Do not edit this block by hand._
+
+- Runtime: v22.22.0 on darwin/arm64
+- Samples: 2 warmup runs, 10 measured runs
+- Aggregation: trimmed mean for wall-clock time; average per-run memory delta for RSS
+
+| Scale | Fixture | Node.js | Rush-FS | Ratio | Node RSS | Rush-FS RSS |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| single-file | - | 0.05 ms | 0.03 ms | 1.42x faster | 27.2 KB | 3.2 KB |
+| directory | - | 0.04 ms | 0.03 ms | 1.26x faster | 0 B | 0 B |
+| batch-128-files | - | 1.44 ms | 1.48 ms | 1.03x slower | 8.0 KB | 0 B |
+
+<!-- rush-fs-perf:end stat -->
+
 ## Notes
 
 - **Symlinks**: `stat` follows symlinks; use `lstat` for the link metadata.
 - **Dates**: `atime`, `mtime`, `ctime`, `birthtime` are `Date` objects; `*Ms` are numbers.
+- **Known gap**: Missing-path errors currently have Node-like messages, but do not expose Node-style `code`, `path`, and `syscall` fields yet.
+- **Unsupported Node options**: `bigint`, `throwIfNoEntry`, `Buffer` paths, and `URL` paths are not part of the current Rush-FS `stat` surface.
