@@ -32,3 +32,5 @@ Single syscall (with resolution); on par with Node.js. See [Benchmarks](/benchma
 ## Notes
 
 - **Symlinks**: Fully resolves symlinks in the path. Fails if the target does not exist (same as Node.js).
+- **Known gap**: Missing-path errors currently have Node-like messages, but do not expose Node-style `code`, `path`, and `syscall` fields yet.
+- **Unsupported Node inputs/options**: `Buffer` paths, `URL` paths, the `encoding` option, `realpath.native`, and the legacy cache option are not part of the current Rush-FS `realpath` surface.
