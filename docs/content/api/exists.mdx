@@ -15,7 +15,7 @@ if (ok) await doSomething()
 
 ### `exists(path)`
 
-**Async.** Returns `Promise<boolean>`.
+**Async.** Returns `Promise<boolean>`. This is a Rush-FS convenience API; Node does not expose `fs.promises.exists`.
 
 | Argument | Type   | Description |
 | -------- | ------ | ----------- |
@@ -39,3 +39,5 @@ For sync “exists” checks on hot paths, Node.js can be faster; for async or b
 
 - **Race**: Between `exists()` and a subsequent operation the file may be deleted; prefer `stat` or try the operation and handle `ENOENT` when robustness matters.
 - **Type**: Use `stat`/`lstat` if you need to know whether the path is a file, directory, or symlink.
+- **Symlinks**: Broken symlinks return `false`, matching `node:fs.existsSync`.
+- **Unsupported Node path inputs**: `Buffer` paths and `URL` paths are not part of the current Rush-FS `exists` surface.
