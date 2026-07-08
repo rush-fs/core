@@ -16,7 +16,7 @@ const first = await mkdir('./x/y/z', { recursive: true, mode: 0o755 }) // first 
 
 ### `mkdir(path, options?)`
 
-**Async.** Returns `Promise<string | undefined>` (recursive: first created path).
+**Async.** Returns `Promise<string | undefined>` (`recursive: true`: first created path when a directory was created).
 
 | Argument  | Type   | Description |
 | --------- | ------ | ----------- |
@@ -35,3 +35,6 @@ Single-directory and recursive mkdir are atomic/serial operations. No specific b
 
 - **recursive**: When true, creates parent directories as needed; does not fail if the path already exists (same as Node.js).
 - **mode**: Applied to created directories; default is platform-dependent. Use octal (e.g. `0o755`).
+- **Known return gap**: Non-recursive success currently returns `null` from Rush-FS where Node returns `undefined`; treat the value as falsy unless using `recursive: true`.
+- **Known gap**: Filesystem errors currently have Node-like messages, but do not expose Node-style `code`, `path`, and `syscall` fields yet.
+- **Unsupported Node inputs**: String mode values, `Buffer` paths, and `URL` paths are not part of the current Rush-FS `mkdir` surface.
