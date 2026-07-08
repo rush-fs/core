@@ -177,3 +177,41 @@ test('syncPerformanceDoc maps stat reports to stat docs', (t) => {
   t.true(content.includes('| single-file | - | 1.00 ms | 2.00 ms | 2.00x slower | 1.0 KB | 2.0 KB |'))
   t.false(content.includes('old generated content'))
 })
+
+test('syncPerformanceDoc maps lstat reports to lstat docs', (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'rush-fs-sync-perf-docs-'))
+  t.teardown(() => fs.rmSync(root, { recursive: true, force: true }))
+  const docsRoot = path.join(root, 'api')
+  fs.mkdirSync(docsRoot, { recursive: true })
+  const reportPath = path.join(root, 'lstat.json')
+  const docPath = path.join(docsRoot, 'lstat.mdx')
+  fs.writeFileSync(
+    reportPath,
+    JSON.stringify({
+      ...report,
+      comparisons: [
+        {
+          ...report.comparisons[0],
+          api: 'lstat',
+          scale: 'symlink',
+          fixture: undefined,
+        },
+      ],
+    }),
+  )
+  fs.writeFileSync(
+    docPath,
+    [
+      'before',
+      '<!-- rush-fs-perf:start lstat -->',
+      'old generated content',
+      '<!-- rush-fs-perf:end lstat -->',
+      'after',
+    ].join('\n'),
+  )
+
+  t.is(syncPerformanceDoc({ api: 'lstat', reportPath, docsRoot }), docPath)
+  const content = fs.readFileSync(docPath, 'utf8')
+  t.true(content.includes('| symlink | - | 1.00 ms | 2.00 ms | 2.00x slower | 1.0 KB | 2.0 KB |'))
+  t.false(content.includes('old generated content'))
+})
