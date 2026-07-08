@@ -5,6 +5,7 @@ import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const apiDocNames = new Map([
+  ['copyFile', 'copy-file.mdx'],
   ['readFile', 'read-file.mdx'],
   ['lstat', 'lstat.mdx'],
   ['readdir', 'readdir.mdx'],
