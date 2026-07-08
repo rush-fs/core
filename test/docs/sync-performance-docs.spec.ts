@@ -101,3 +101,41 @@ test('syncPerformanceDoc maps readFile reports to read-file docs', (t) => {
   t.true(content.includes('| small-utf8 | - | 1.00 ms | 2.00 ms | 2.00x slower | 1.0 KB | 2.0 KB |'))
   t.false(content.includes('old generated content'))
 })
+
+test('syncPerformanceDoc maps writeFile reports to write-file docs', (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'rush-fs-sync-perf-docs-'))
+  t.teardown(() => fs.rmSync(root, { recursive: true, force: true }))
+  const docsRoot = path.join(root, 'api')
+  fs.mkdirSync(docsRoot, { recursive: true })
+  const reportPath = path.join(root, 'writeFile.json')
+  const docPath = path.join(docsRoot, 'write-file.mdx')
+  fs.writeFileSync(
+    reportPath,
+    JSON.stringify({
+      ...report,
+      comparisons: [
+        {
+          ...report.comparisons[0],
+          api: 'writeFile',
+          scale: 'small-string',
+          fixture: undefined,
+        },
+      ],
+    }),
+  )
+  fs.writeFileSync(
+    docPath,
+    [
+      'before',
+      '<!-- rush-fs-perf:start writeFile -->',
+      'old generated content',
+      '<!-- rush-fs-perf:end writeFile -->',
+      'after',
+    ].join('\n'),
+  )
+
+  t.is(syncPerformanceDoc({ api: 'writeFile', reportPath, docsRoot }), docPath)
+  const content = fs.readFileSync(docPath, 'utf8')
+  t.true(content.includes('| small-string | - | 1.00 ms | 2.00 ms | 2.00x slower | 1.0 KB | 2.0 KB |'))
+  t.false(content.includes('old generated content'))
+})
