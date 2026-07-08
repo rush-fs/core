@@ -1,6 +1,6 @@
 # utimes
 
-Set the access and modification times of a file (atime, mtime). Accepts numbers (seconds since epoch) or Date-like values per Node.js.
+Set the access and modification times of a file (atime, mtime). Current Rush-FS inputs are numbers in seconds since the Unix epoch.
 
 ## Basic usage
 
@@ -33,3 +33,5 @@ Single syscall; on par with Node.js. See [Benchmarks](/benchmarks).
 ## Notes
 
 - **Precision**: Platform-dependent; same as Node.js.
+- **Known gap**: Missing-path errors currently have Node-like messages, but do not expose Node-style `code`, `path`, and `syscall` fields yet.
+- **Unsupported Node inputs/APIs**: `Buffer` paths, `URL` paths, `Date` time values, string time values, and file-descriptor `futimes` APIs are not part of the current Rush-FS `utimes` surface.
