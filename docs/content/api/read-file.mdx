@@ -35,6 +35,7 @@ const hex = await readFile('./file.bin', { encoding: 'hex' })
 | --------- | ------ | ------- | ----------- |
 | `encoding` | string | null   | `'utf8'`, `'ascii'`, `'latin1'`, `'base64'`, `'base64url'`, `'hex'`. If set, returns `string`; otherwise returns `Buffer`. |
 | `flag`   | string | `'r'`   | File open flag (e.g. `'r'`, `'r+'`). |
+| `lines`  | object | none    | **(Rush-FS)** Optional `{ from, to }` line range for text reads. |
 
 ### `readFileSync(path, options?)`
 
@@ -47,8 +48,30 @@ const hex = await readFile('./file.bin', { encoding: 'hex' })
 
 See [Benchmarks](/benchmarks) (e.g. `readFile` 4 MB utf8, 64 KB utf8).
 
+### Local scale report
+
+<!-- rush-fs-perf:start readFile -->
+
+_Generated from local performance reports. Do not edit this block by hand._
+
+- Runtime: v22.22.0 on darwin/arm64
+- Samples: 2 warmup runs, 10 measured runs
+- Aggregation: trimmed mean for wall-clock time; average per-run memory delta for RSS
+
+| Scale | Fixture | Node.js | Rush-FS | Ratio | Node RSS | Rush-FS RSS |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| small-utf8 | - | 0.16 ms | 0.04 ms | 4.11x faster | 16.0 KB | 0 B |
+| medium-utf8 | - | 0.14 ms | 0.05 ms | 2.67x faster | 8.0 KB | 0 B |
+| large-utf8 | - | 0.99 ms | 0.70 ms | 1.42x faster | 4.2 MB | 0 B |
+| large-buffer | - | 0.40 ms | 0.23 ms | 1.73x faster | 0 B | 0 B |
+
+<!-- rush-fs-perf:end readFile -->
+
 ## Notes
 
 - **Encodings**: Supported encodings are `utf8`, `ascii`, `latin1`, `base64`, `base64url`, `hex`. Behavior matches Node.js where implemented.
 - **Flags**: Standard flags (e.g. `r`, `r+`) are supported. Use the same semantics as Node.js for compatibility.
+- **Lines extension**: `lines` is a Rush-FS extension for text reads, not a Node.js option.
+- **Known gap**: Missing-path errors currently have Node-like messages, but do not expose Node-style `code`, `path`, and `syscall` fields yet.
+- **Unsupported Node options**: `AbortSignal`, `Buffer` paths, and `URL` paths are not part of the current Rush-FS `readFile` surface.
 - **Large files**: Reading the whole file into memory is the same as Node.js; for very large files consider streaming (Node.js `fs.createReadStream`; Rush-FS does not provide a stream API for this yet).
