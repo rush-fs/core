@@ -1,0 +1,59 @@
+import test from 'ava'
+
+import { renderPerformanceSection, replacePerformanceSection } from '../../scripts/sync-performance-docs.mjs'
+
+const report = {
+  generatedAt: '2026-07-09T00:00:00.000Z',
+  options: { warmup: 2, iterations: 10 },
+  runtime: {
+    node: 'v24.0.0',
+    platform: 'darwin',
+    arch: 'arm64',
+    cpu: 'Apple M4',
+    pid: 123,
+  },
+  comparisons: [
+    {
+      api: 'readdir',
+      scale: 'tiny',
+      fixture: {
+        files: 4,
+        dirs: 2,
+        profile: { name: 'tiny', breadth: 1, depth: 1, filesPerDir: 4, fileSize: 32 },
+      },
+      node: {
+        duration: { trimmedMean: 1 },
+        delta: { rss: 1024 },
+      },
+      rush: {
+        duration: { trimmedMean: 2 },
+        delta: { rss: 2048 },
+      },
+      ratioLabel: '2.00x slower',
+    },
+  ],
+}
+
+test('renderPerformanceSection creates a markdown table for an API', (t) => {
+  const markdown = renderPerformanceSection(report, 'readdir')
+
+  t.true(markdown.includes('<!-- rush-fs-perf:start readdir -->'))
+  t.true(markdown.includes('| tiny | 4 files / 2 dirs | 1.00 ms | 2.00 ms | 2.00x slower | 1.0 KB | 2.0 KB |'))
+  t.true(markdown.includes('2 warmup runs, 10 measured runs'))
+})
+
+test('replacePerformanceSection updates only the marker block', (t) => {
+  const content = [
+    'before',
+    '<!-- rush-fs-perf:start readdir -->',
+    'old generated content',
+    '<!-- rush-fs-perf:end readdir -->',
+    'after',
+  ].join('\n')
+
+  const next = replacePerformanceSection(content, 'readdir', renderPerformanceSection(report, 'readdir'))
+
+  t.true(next.startsWith('before\n<!-- rush-fs-perf:start readdir -->'))
+  t.true(next.endsWith('<!-- rush-fs-perf:end readdir -->\nafter'))
+  t.false(next.includes('old generated content'))
+})
