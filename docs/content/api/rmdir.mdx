@@ -32,3 +32,5 @@ Single syscall; on par with Node.js. No dedicated benchmark; see [Benchmarks](/b
 
 - **Non-empty**: Use `rm(path, { recursive: true })` to remove a directory and its contents.
 - **Errors**: Same as Node.js (e.g. `ENOENT`, `ENOTEMPTY`, `EACCES`).
+- **Known gap**: Filesystem errors currently have Node-like messages, but do not expose Node-style `code`, `path`, and `syscall` fields yet.
+- **Unsupported Node inputs/options**: `Buffer` paths, `URL` paths, and legacy `rmdir` options such as deprecated recursive removal are not part of the current Rush-FS `rmdir` surface.
