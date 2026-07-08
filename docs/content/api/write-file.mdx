@@ -42,7 +42,30 @@ From repo benchmarks (`pnpm build && pnpm bench`):
 
 Single-file writes are on par with Node.js for small payloads; for very large strings Node.js can be faster due to N-API copy cost.
 
+### Local scale report
+
+<!-- rush-fs-perf:start writeFile -->
+
+_Generated from local performance reports. Do not edit this block by hand._
+
+- Runtime: v22.22.0 on darwin/arm64
+- Samples: 2 warmup runs, 10 measured runs
+- Aggregation: trimmed mean for wall-clock time; average per-run memory delta for RSS
+
+| Scale | Fixture | Node.js | Rush-FS | Ratio | Node RSS | Rush-FS RSS |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| small-string | - | 0.24 ms | 0.09 ms | 2.56x faster | 16.0 KB | 0 B |
+| medium-string | - | 0.20 ms | 0.12 ms | 1.64x faster | 0 B | 0 B |
+| large-string | - | 1.82 ms | 1.54 ms | 1.18x faster | 0 B | 0 B |
+| medium-buffer | - | 0.21 ms | 0.13 ms | 1.62x faster | 0 B | 0 B |
+
+<!-- rush-fs-perf:end writeFile -->
+
 ## Notes
 
 - **Encodings**: Same as Node.js (utf8, ascii, latin1, base64, base64url, hex).
+- **Supported input shape**: Rush-FS currently accepts string paths and `string | Buffer` data. Node also accepts `URL` / `Buffer` paths and more typed array data shapes; those are deferred.
+- **Known gap**: Filesystem errors currently have Node-like messages, but do not expose Node-style `code`, `path`, and `syscall` fields yet.
+- **Known gap**: Odd-length hex strings are accepted by Node's encoding path but currently rejected by Rush-FS.
+- **Unsupported Node options**: `AbortSignal` and file-handle targets are not part of the current Rush-FS `writeFile` surface.
 - **Large data**: Writing a very large string (e.g. 4 MB) crosses the N-API boundary and can be slower than Node.js; prefer `Buffer` for large binary data where possible.
