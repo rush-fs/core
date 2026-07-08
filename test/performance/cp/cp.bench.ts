@@ -14,13 +14,25 @@ async function main(): Promise<void> {
     const fixture = await createScaleFixture('perf-cp', scale)
     const destRoot = await nodeFs.mkdtemp(path.join(os.tmpdir(), 'rush-fs-perf-cp-'))
     try {
-      const nodeDest = path.join(destRoot, 'node')
-      const rushDest = path.join(destRoot, 'rush')
-      const node = await measure('node cp recursive', () => nodeFs.cp(fixture.root, nodeDest, { recursive: true }))
-      const rush = await measure('rush cp recursive', () =>
-        cp(fixture.root, rushDest, { recursive: true, concurrency: 4 }),
+      let nodeDest = ''
+      let rushDest = ''
+      const node = await measure('node cp recursive', () => nodeFs.cp(fixture.root, nodeDest, { recursive: true }), {
+        beforeEach: ({ index, warmup }) => {
+          nodeDest = path.join(destRoot, `node-${warmup ? 'warmup' : 'sample'}-${index}`)
+        },
+        afterEach: () => removeFixture(nodeDest),
+      })
+      const rush = await measure(
+        'rush cp recursive',
+        () => cp(fixture.root, rushDest, { recursive: true, concurrency: 4 }),
+        {
+          beforeEach: ({ index, warmup }) => {
+            rushDest = path.join(destRoot, `rush-${warmup ? 'warmup' : 'sample'}-${index}`)
+          },
+          afterEach: () => removeFixture(rushDest),
+        },
       )
-      printComparison('cp', scale, node, rush)
+      printComparison('cp', scale, node, rush, fixture)
     } finally {
       await removeFixture(fixture.root)
       await removeFixture(destRoot)
@@ -28,7 +40,4 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((error: unknown) => {
-  console.error(error)
-  process.exitCode = 1
-})
+module.exports = { main }

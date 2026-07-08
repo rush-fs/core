@@ -13,14 +13,11 @@ async function main(): Promise<void> {
     try {
       const node = await measure('node readdir recursive', () => nodeFs.readdir(fixture.root, { recursive: true }))
       const rush = await measure('rush readdir recursive', () => readdir(fixture.root, { recursive: true }))
-      printComparison('readdir', scale, node, rush)
+      printComparison('readdir', scale, node, rush, fixture)
     } finally {
       await removeFixture(fixture.root)
     }
   }
 }
 
-main().catch((error: unknown) => {
-  console.error(error)
-  process.exitCode = 1
-})
+module.exports = { main }
