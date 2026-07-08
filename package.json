@@ -50,6 +50,7 @@
     "doc:dev": "pnpm -C docs dev",
     "doc:build": "pnpm -C docs build",
     "doc:start": "pnpm -C docs start",
+    "docs:sync-perf": "node scripts/sync-performance-docs.mjs",
     "bench": "node --import @oxc-node/core/register benchmark/bench.ts",
     "build": "napi build --platform --release",
     "build:debug": "napi build --platform",
@@ -64,6 +65,7 @@
     "test": "ava",
     "test:conformance": "ava \"test/conformance/**/*.spec.ts\"",
     "test:governance": "ava \"test/governance/**/*.spec.ts\"",
+    "test:performance-tools": "ava \"test/performance/**/*.spec.ts\" \"test/docs/**/*.spec.ts\"",
     "preversion": "napi build --platform && git add .",
     "version": "napi version",
     "prepare": "husky"
@@ -103,7 +105,9 @@
     "files": [
       "__test__/**/*.spec.ts",
       "test/conformance/**/*.spec.ts",
-      "test/governance/**/*.spec.ts"
+      "test/docs/**/*.spec.ts",
+      "test/governance/**/*.spec.ts",
+      "test/performance/**/*.spec.ts"
     ],
     "extensions": {
       "ts": "module"
