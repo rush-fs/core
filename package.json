@@ -46,6 +46,7 @@
   },
   "scripts": {
     "artifacts": "napi artifacts",
+    "commit:check": "node scripts/validate-commit-msg.mjs",
     "doc:dev": "pnpm -C docs dev",
     "doc:build": "pnpm -C docs build",
     "doc:start": "pnpm -C docs start",
@@ -58,8 +59,11 @@
     "format:rs": "cargo fmt",
     "fmt:check": "cargo fmt -- --check",
     "lint": "oxlint .",
+    "perf:fs": "node --expose-gc --import @oxc-node/core/register scripts/run-performance.mjs",
     "prepublishOnly": "napi prepublish -t npm",
     "test": "ava",
+    "test:conformance": "ava \"test/conformance/**/*.spec.ts\"",
+    "test:governance": "ava \"test/governance/**/*.spec.ts\"",
     "preversion": "napi build --platform && git add .",
     "version": "napi version",
     "prepare": "husky"
@@ -96,6 +100,11 @@
     ]
   },
   "ava": {
+    "files": [
+      "__test__/**/*.spec.ts",
+      "test/conformance/**/*.spec.ts",
+      "test/governance/**/*.spec.ts"
+    ],
     "extensions": {
       "ts": "module"
     },
