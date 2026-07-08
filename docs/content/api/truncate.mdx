@@ -33,3 +33,6 @@ Single syscall; on par with Node.js. See [Benchmarks](/benchmarks).
 ## Notes
 
 - **Extension**: When extending, behavior may be platform-dependent (zero-fill or sparse); same as Node.js.
+- **Known length gap**: Node rejects negative or out-of-range lengths; Rush-FS currently clamps negative lengths to `0`.
+- **Known gap**: Missing-path errors currently have Node-like messages, but do not expose Node-style `code`, `path`, and `syscall` fields yet.
+- **Unsupported Node inputs/APIs**: `Buffer` paths, `URL` paths, and file-descriptor `ftruncate` APIs are not part of the current Rush-FS `truncate` surface.
