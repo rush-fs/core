@@ -8,7 +8,7 @@ Read the target path of a symbolic link. Fails for non-symlinks.
 import { readlink } from '@rush-fs/core'
 
 const target = await readlink('./mylink')
-console.log(target) // resolved target path
+console.log(target) // raw stored target path
 ```
 
 ## Methods
@@ -32,3 +32,5 @@ Single syscall; on par with Node.js. See [Benchmarks](/benchmarks).
 ## Notes
 
 - **Resolution**: Returns the raw target string; use `realpath` to resolve to an absolute path and follow nested symlinks.
+- **Known gap**: Missing-path and non-symlink errors currently have Node-like messages, but do not expose Node-style `code`, `path`, and `syscall` fields yet.
+- **Unsupported Node inputs/options**: `Buffer` paths, `URL` paths, and the `encoding` option are not part of the current Rush-FS `readlink` surface.
