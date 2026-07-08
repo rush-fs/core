@@ -56,7 +56,10 @@ pnpm test
 pnpm build:debug     # Dev build (no optimizations, fast compile)
 pnpm build           # Release build (LTO, slower compile, faster output)
 pnpm test            # Run all tests (AVA)
+pnpm test:conformance # Run Node-aligned conformance tests
+pnpm test:governance # Run branch and commit message rule tests
 pnpm bench           # Run all benchmarks
+pnpm perf:fs         # Run manual fs performance reports
 pnpm bench readdir   # Run only readdir benchmarks
 pnpm lint            # Lint (oxlint)
 pnpm format          # Format all code (Prettier + cargo fmt + taplo)
@@ -82,6 +85,12 @@ rush-fs/
 │   ├── readdir.spec.ts
 │   ├── stat.spec.ts
 │   └── ...
+├── test/
+│   ├── conformance/        # SDD-first Node-aligned behavior tests
+│   │   └── <api>/sdd.md    # Per-API SDD before TDD
+│   ├── fixtures/           # Shared fixture and scale builders
+│   ├── governance/         # Branch and commit rule tests
+│   └── performance/        # Manual speed and memory reports
 ├── benchmark/             # Performance benchmarks
 │   ├── bench.ts            # Benchmark entry (auto-discovers and runs)
 │   ├── readdir.ts          # readdir benchmarks
@@ -279,6 +288,12 @@ builder.build_parallel().run(/* ... */);
 
 One test file per API: `__test__/<api_name>.spec.ts`
 
+For the SDD-first conformance workflow, new high-value API work also uses:
+
+- `test/conformance/<api>/sdd.md` for API-specific SDD before TDD
+- `test/conformance/<api>/*.spec.ts` for Node-aligned behavior tests
+- `test/performance/<api>/*.bench.ts` for manual speed and memory reports
+
 ### Framework
 
 [AVA](https://github.com/avajs/ava); TypeScript is compiled via `@oxc-node/core`. Tests run in ESM — use `import` only, not `require()`.
@@ -350,6 +365,21 @@ test('statSync: should match node:fs stat values', (t) => {
 
 Assert error message format matches Node.js (`ENOENT`, `EACCES`, `EEXIST`, etc.):
 
+### SDD and docs alignment
+
+Before writing conformance tests for a high-value API, update `test/conformance/<api>/sdd.md` and compare it with the official docs page under `docs/content/api/`.
+
+Each API SDD should include:
+
+- Compatibility target and Node oracle
+- Value hypothesis and performance boundary
+- Functional matrix
+- Scale matrix
+- Performance metrics
+- Docs Alignment section pointing to the relevant `docs/content/api/<api>.mdx`
+
+If conformance tests or performance reports produce an important conclusion, update the docs in the same change. Examples include unsupported Node options, known compatibility gaps, break-even scale, tiny-case bridge overhead, or recommended concurrency guidance.
+
 ```typescript
 test('should throw ENOENT on missing file', (t) => {
   t.throws(() => someSync('./no-such-file'), { message: /ENOENT/ })
@@ -375,6 +405,8 @@ npx ava __test__/stat.spec.ts    # Single file
 
 Benchmarks live in `benchmark/`. Read-only operations (stat, readFile, exists) use [mitata](https://github.com/evanwashere/mitata) for micro-benchmarks; destructive or side-effectful ones (writeFile, copyFile, mkdir, rm) use manual iterations and `process.hrtime`, with test data recreated per run.
 
+The SDD/TDD performance reports live in `test/performance/`. They are report-only and do not fail on speed or memory results. Use them to attach evidence to PRs for APIs where Rush-FS is expected to improve on Node.js.
+
 ### Existing benchmarks
 
 | File            | APIs covered                                              | Mode   |
@@ -397,6 +429,8 @@ pnpm bench readdir      # Only readdir
 pnpm bench stat
 pnpm bench read_file
 pnpm bench glob
+pnpm perf:fs            # Manual fs speed + memory reports
+pnpm perf:fs readdir    # Only readdir performance report
 ```
 
 ### Adding a benchmark
@@ -428,6 +462,8 @@ await run({ colors: true })
 - Mark Node.js as `.baseline()` for comparison
 - Prefer real-world data (e.g. `node_modules`) where useful
 - mitata warms up automatically; for manual benches, run a warmup first
+- For `test/performance/`, default scales are `tiny`, `small`, `medium`, and `large`; set `RUSH_FS_EXTREME=1` to include `extreme`
+- Performance reports should expose both wins and losses. Tiny cases may show Rush-FS losing because bridge overhead dominates.
 
 ---
 
@@ -453,18 +489,52 @@ git checkout -b feat/add-symlink
 
 pnpm build:debug
 pnpm test
+pnpm test:conformance
 
 pnpm format
 
 git add .
-git commit -m "feat: add symlink/symlinkSync"
+git commit -m "✨ feat(symlink): add promise symlink support"
 
-# Optional: attach benchmark results in PR
+# Attach performance results in PRs for performance-sensitive APIs
 pnpm build
-pnpm bench
+pnpm perf:fs readdir
 ```
 
-(husky + lint-staged will format staged files on commit.)
+(husky validates branch names and commit messages, then lint-staged formats staged files on commit.)
+
+### Branch names
+
+Use lowercase kebab-case branch names:
+
+- Development branches: `feat/<slug>`, `fix/<slug>`, `perf/<slug>`, `docs/<slug>`, `refactor/<slug>`, `chore/<slug>`, `build/<slug>`, `ci/<slug>`, `release/<slug>`
+- Temporary test branches: `test-<original-branch>`, for example `test-feat/node-fs-conformance`
+- Delete development and test branches after the PR is merged
+
+### Commit messages
+
+Commit messages are English and intentionally concise. Prefer describing the capability or behavior change, not tiny implementation trivia.
+
+Format:
+
+```text
+[emoji] type(scope): concise English summary
+```
+
+Emoji is optional and, when used, goes at the start:
+
+```text
+✨ feat(glob): add promise conformance matrix
+✅ test(readdir): cover recursive scale fixtures
+⚡ perf(cp): add large tree memory report
+📝 docs: clarify promise-first compatibility target
+```
+
+Allowed types: `feat`, `fix`, `test`, `perf`, `docs`, `refactor`, `build`, `ci`, `chore`, `release`.
+
+API behavior changes must include an API scope, for example `feat(glob)`, `test(readdir)`, or `perf(cp)`. Non-API work may omit scope or use a tooling scope such as `build(husky)` or `chore(openspec)`.
+
+Split commits by API and change type. Do not bundle unrelated API work into one commit.
 
 ### PR checklist
 
@@ -474,7 +544,7 @@ pnpm bench
 - [ ] Tests in `__test__/` (functional + parity + error cases)
 - [ ] `pnpm test` passes
 - [ ] README.md and README.zh-CN.md Roadmap updated
-- [ ] **Docs**: When adding or changing an API, add or update the corresponding page under `docs/content/api/` (see [Documentation](#documentation) and `.cursor/rules/docs-conventions.mdc`). Run `pnpm bench` for the Performance section and use table(s) with at least Node.js `fs` as baseline.
+- [ ] **Docs**: When adding or changing an API, add or update the corresponding page under `docs/content/api/` (see [Documentation](#documentation) and `.cursor/rules/docs-conventions.mdc`). For SDD/TDD work, compare `test/conformance/<api>/sdd.md` against the docs page and sync important conclusions. Run `pnpm bench` or `pnpm perf:fs <api>` for the Performance section and use table(s) with at least Node.js `fs` as baseline.
 - [ ] (If applicable) Benchmark added and results included in PR
 
 ---
@@ -484,6 +554,7 @@ pnpm bench
 - **Every supported API must have a doc page** under `docs/content/api/`. The docs site (Nextra) is in the `docs/` directory; run `pnpm doc:dev` from the repo root to preview.
 - **When you add or change an API**, add or update the corresponding file (e.g. `docs/content/api/readdir.mdx`) and register it in `docs/content/api/_meta.js`. Each API page must include: **Basic usage**, **Methods** (signatures and options), **Performance** (data from `pnpm bench`, in table form, at least vs Node.js `fs`), and **Notes** (known issues, tips). See `.cursor/rules/docs-conventions.mdc` for the full convention.
 - **Keep docs in sync**: If you change behavior or options, update the API doc and the README roadmap so the docs stay accurate.
+- **Use SDD as a docs checkpoint**: For APIs with `test/conformance/<api>/sdd.md`, the SDD's Docs Alignment section is the minimum checklist for keeping official docs consistent with conformance and performance findings.
 
 ### Deploying the docs
 
