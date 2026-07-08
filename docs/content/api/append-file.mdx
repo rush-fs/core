@@ -40,3 +40,5 @@ On par with Node.js; single-file append is an atomic syscall.
 ## Notes
 
 - **Encodings**: utf8, ascii, latin1, base64, base64url, hex. Same semantics as Node.js.
+- **Known gap**: Filesystem errors currently have Node-like messages, but do not expose Node-style `code`, `path`, and `syscall` fields yet.
+- **Unsupported Node inputs/options**: `Buffer` paths, `URL` paths, TypedArray/DataView data, `AbortSignal`, and newer `flush` behavior are not part of the current Rush-FS `appendFile` surface.
