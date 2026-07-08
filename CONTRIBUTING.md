@@ -23,7 +23,7 @@ Welcome to contributing to rush-fs! This document walks you through environment 
 
 | Tool        | Version             | Purpose                     |
 | ----------- | ------------------- | --------------------------- |
-| **Node.js** | >= 20               | Run tests and build scripts |
+| **Node.js** | 22 or 24            | Run tests and build scripts |
 | **pnpm**    | >= 9                | Package manager             |
 | **Rust**    | stable (via rustup) | Build native module         |
 | **rustup**  | Latest              | Rust toolchain manager      |
@@ -60,7 +60,8 @@ pnpm test:conformance # Run Node-aligned conformance tests
 pnpm test:governance # Run branch and commit message rule tests
 pnpm bench           # Run all benchmarks
 pnpm perf:fs         # Run manual fs performance reports
-pnpm bench readdir   # Run only readdir benchmarks
+pnpm perf:fs readdir # Run only readdir performance reports
+pnpm docs:sync-perf  # Sync a JSON performance report into API docs
 pnpm lint            # Lint (oxlint)
 pnpm format          # Format all code (Prettier + cargo fmt + taplo)
 ```
@@ -431,6 +432,8 @@ pnpm bench read_file
 pnpm bench glob
 pnpm perf:fs            # Manual fs speed + memory reports
 pnpm perf:fs readdir    # Only readdir performance report
+pnpm perf:fs readdir --iterations 10 --warmup 2 --json .perf/readdir.json
+pnpm docs:sync-perf readdir --report .perf/readdir.json
 ```
 
 ### Adding a benchmark
@@ -462,8 +465,11 @@ await run({ colors: true })
 - Mark Node.js as `.baseline()` for comparison
 - Prefer real-world data (e.g. `node_modules`) where useful
 - mitata warms up automatically; for manual benches, run a warmup first
+- For `test/performance/`, defaults are 2 warmup runs and 10 measured runs; override with `--warmup`, `--iterations`, `RUSH_FS_PERF_WARMUP`, or `RUSH_FS_PERF_ITERATIONS`
+- Manual performance reports record wall-clock time plus `rss`, `heapUsed`, and `external`; generated docs use trimmed mean for time and average per-run memory deltas
 - For `test/performance/`, default scales are `tiny`, `small`, `medium`, and `large`; set `RUSH_FS_EXTREME=1` to include `extreme`
 - Performance reports should expose both wins and losses. Tiny cases may show Rush-FS losing because bridge overhead dominates.
+- Use `--json <path>` when results should be reviewed or synced into API docs.
 
 ---
 
@@ -498,7 +504,8 @@ git commit -m "✨ feat(symlink): add promise symlink support"
 
 # Attach performance results in PRs for performance-sensitive APIs
 pnpm build
-pnpm perf:fs readdir
+pnpm perf:fs readdir --json .perf/readdir.json
+pnpm docs:sync-perf readdir --report .perf/readdir.json
 ```
 
 (husky validates branch names and commit messages, then lint-staged formats staged files on commit.)
@@ -544,7 +551,7 @@ Split commits by API and change type. Do not bundle unrelated API work into one 
 - [ ] Tests in `__test__/` (functional + parity + error cases)
 - [ ] `pnpm test` passes
 - [ ] README.md and README.zh-CN.md Roadmap updated
-- [ ] **Docs**: When adding or changing an API, add or update the corresponding page under `docs/content/api/` (see [Documentation](#documentation) and `.cursor/rules/docs-conventions.mdc`). For SDD/TDD work, compare `test/conformance/<api>/sdd.md` against the docs page and sync important conclusions. Run `pnpm bench` or `pnpm perf:fs <api>` for the Performance section and use table(s) with at least Node.js `fs` as baseline.
+- [ ] **Docs**: When adding or changing an API, add or update the corresponding page under `docs/content/api/` (see [Documentation](#documentation) and `.cursor/rules/docs-conventions.mdc`). For SDD/TDD work, compare `test/conformance/<api>/sdd.md` against the docs page and sync important conclusions. Run `pnpm bench` or `pnpm perf:fs <api> --json <path>` for the Performance section and use table(s) with at least Node.js `fs` as baseline.
 - [ ] (If applicable) Benchmark added and results included in PR
 
 ---

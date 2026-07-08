@@ -4,6 +4,22 @@ Rush-FS excels at **recursive and batch filesystem operations** where Rust's par
 
 > Tested on Apple Silicon (arm64), Node.js 24.0.2, release build with LTO. Run `pnpm build && pnpm bench` in the [repo](https://github.com/CoderSerio/rush-fs) to reproduce.
 
+## Measurement policy
+
+CI runs functional and conformance smoke tests across the supported Node.js LTS matrix. Performance reports are local/manual evidence, not CI gates.
+
+For filesystem scale reports, use:
+
+```bash
+pnpm build
+pnpm perf:fs readdir --iterations 10 --warmup 2 --json .perf/readdir.json
+pnpm docs:sync-perf readdir --report .perf/readdir.json
+```
+
+The report runner records wall-clock time plus process-level `rss`, `heapUsed`, and `external` memory deltas. Each case defaults to 2 warmup runs and 10 measured runs. Docs use the trimmed mean for wall-clock time and average per-run memory deltas, with median/min/max retained in the JSON output for review.
+
+Scale fixtures intentionally include tiny, small, medium, and large trees. Tiny cases expose bridge and scheduling overhead; larger trees show where traversal parallelism starts to pay off. Extreme fixtures are manual-only and should not be used in CI.
+
 ## Where Rush-FS shines
 
 | Scenario                                         | Node.js   | Rush-FS  | Speedup   |

@@ -54,6 +54,25 @@ const all = await readdir('./src', {
 
 See [Benchmarks](/benchmarks) for numbers (e.g. `readdir` recursive ~30k entries: Node 281 ms vs Rush-FS 23 ms).
 
+### Local scale report
+
+<!-- rush-fs-perf:start readdir -->
+
+_Generated from local performance reports. Do not edit this block by hand._
+
+- Runtime: v22.22.0 on darwin/arm64
+- Samples: 2 warmup runs, 10 measured runs
+- Aggregation: trimmed mean for wall-clock time; average per-run memory delta for RSS
+
+| Scale | Fixture | Node.js | Rush-FS | Ratio | Node RSS | Rush-FS RSS |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| tiny | 8 files / 2 dirs | 0.25 ms | 0.30 ms | 1.21x slower | 14.4 KB | 0 B |
+| small | 104 files / 13 dirs | 0.90 ms | 0.42 ms | 2.16x faster | 8.0 KB | 9.6 KB |
+| medium | 2728 files / 341 dirs | 22.87 ms | 4.24 ms | 5.40x faster | 814.4 KB | 38.4 KB |
+| large | 156248 files / 19531 dirs | 1357.26 ms | 343.92 ms | 3.95x faster | 2.4 MB | -299.2 KB |
+
+<!-- rush-fs-perf:end readdir -->
+
 ## Notes
 
 - **Encoding**: Only `encoding: 'utf8'` is supported. Node.js `readdir` with `encoding: 'buffer'` returns `Buffer[]`; that is not implemented.
