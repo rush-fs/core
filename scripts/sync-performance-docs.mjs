@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url'
 const apiDocNames = new Map([
   ['readFile', 'read-file.mdx'],
   ['readdir', 'readdir.mdx'],
+  ['stat', 'stat.mdx'],
   ['writeFile', 'write-file.mdx'],
 ])
 

@@ -139,3 +139,41 @@ test('syncPerformanceDoc maps writeFile reports to write-file docs', (t) => {
   t.true(content.includes('| small-string | - | 1.00 ms | 2.00 ms | 2.00x slower | 1.0 KB | 2.0 KB |'))
   t.false(content.includes('old generated content'))
 })
+
+test('syncPerformanceDoc maps stat reports to stat docs', (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'rush-fs-sync-perf-docs-'))
+  t.teardown(() => fs.rmSync(root, { recursive: true, force: true }))
+  const docsRoot = path.join(root, 'api')
+  fs.mkdirSync(docsRoot, { recursive: true })
+  const reportPath = path.join(root, 'stat.json')
+  const docPath = path.join(docsRoot, 'stat.mdx')
+  fs.writeFileSync(
+    reportPath,
+    JSON.stringify({
+      ...report,
+      comparisons: [
+        {
+          ...report.comparisons[0],
+          api: 'stat',
+          scale: 'single-file',
+          fixture: undefined,
+        },
+      ],
+    }),
+  )
+  fs.writeFileSync(
+    docPath,
+    [
+      'before',
+      '<!-- rush-fs-perf:start stat -->',
+      'old generated content',
+      '<!-- rush-fs-perf:end stat -->',
+      'after',
+    ].join('\n'),
+  )
+
+  t.is(syncPerformanceDoc({ api: 'stat', reportPath, docsRoot }), docPath)
+  const content = fs.readFileSync(docPath, 'utf8')
+  t.true(content.includes('| single-file | - | 1.00 ms | 2.00 ms | 2.00x slower | 1.0 KB | 2.0 KB |'))
+  t.false(content.includes('old generated content'))
+})
