@@ -34,3 +34,5 @@ Single syscall; on par with Node.js. See [Benchmarks](/benchmarks) for single-fi
 
 - **Overwrite**: On many platforms `newPath` can be overwritten if it exists; behavior is platform-dependent (same as Node.js).
 - **Cross-device**: Moving across filesystems may not be supported; copy + delete may be required.
+- **Known gap**: Missing-source and destination errors currently have Node-like messages, but do not expose Node-style `code`, `path`, `dest`, and `syscall` fields yet.
+- **Unsupported Node path inputs**: `Buffer` paths and `URL` paths are not part of the current Rush-FS `rename` surface.
