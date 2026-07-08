@@ -46,3 +46,5 @@ Rush-FS is faster for typical access checks; for F_OK-only sync checks Node.js c
 
 - **Prefer exists**: If you only need “file exists”, `exists(path)` is simpler; `access(path, F_OK)` is the lower-level API.
 - **Constants**: Use `constants.F_OK`, `R_OK`, `W_OK`, `X_OK` from `node:fs` (or the numeric values).
+- **Known gap**: Missing-path and permission errors currently have Node-like messages, but do not expose Node-style `code`, `path`, and `syscall` fields yet.
+- **Unsupported Node path inputs**: `Buffer` paths and `URL` paths are not part of the current Rush-FS `access` surface.
