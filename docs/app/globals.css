@@ -1,0 +1,16 @@
+:root {
+  --nextra-bg: 255 255 255;
+  --nextra-primary-hue: 212deg;
+  --nextra-primary-saturation: 100%;
+  --nextra-primary-lightness: 45%;
+  color-scheme: light;
+}
+
+.dark {
+  --nextra-bg: 17 17 17;
+  color-scheme: dark;
+}
+
+body {
+  background-color: rgb(var(--nextra-bg));
+}
