@@ -56,7 +56,7 @@ const readFileReport = {
 test('renderPerformanceSection creates a markdown table for an API', (t) => {
   const markdown = renderPerformanceSection(report, 'readdir')
 
-  t.true(markdown.includes('<!-- rush-fs-perf:start readdir -->'))
+  t.true(markdown.includes('{/* rush-fs-perf:start readdir */}'))
   t.true(markdown.includes('| tiny | 4 files / 2 dirs | 1.00 ms | 2.00 ms | 2.00x slower | 1.0 KB | 2.0 KB |'))
   t.true(markdown.includes('2 warmup runs, 10 measured runs'))
 })
@@ -64,16 +64,16 @@ test('renderPerformanceSection creates a markdown table for an API', (t) => {
 test('replacePerformanceSection updates only the marker block', (t) => {
   const content = [
     'before',
-    '<!-- rush-fs-perf:start readdir -->',
+    '{/* rush-fs-perf:start readdir */}',
     'old generated content',
-    '<!-- rush-fs-perf:end readdir -->',
+    '{/* rush-fs-perf:end readdir */}',
     'after',
   ].join('\n')
 
   const next = replacePerformanceSection(content, 'readdir', renderPerformanceSection(report, 'readdir'))
 
-  t.true(next.startsWith('before\n<!-- rush-fs-perf:start readdir -->'))
-  t.true(next.endsWith('<!-- rush-fs-perf:end readdir -->\nafter'))
+  t.true(next.startsWith('before\n{/* rush-fs-perf:start readdir */}'))
+  t.true(next.endsWith('{/* rush-fs-perf:end readdir */}\nafter'))
   t.false(next.includes('old generated content'))
 })
 
@@ -89,9 +89,9 @@ test('syncPerformanceDoc maps readFile reports to read-file docs', (t) => {
     docPath,
     [
       'before',
-      '<!-- rush-fs-perf:start readFile -->',
+      '{/* rush-fs-perf:start readFile */}',
       'old generated content',
-      '<!-- rush-fs-perf:end readFile -->',
+      '{/* rush-fs-perf:end readFile */}',
       'after',
     ].join('\n'),
   )
@@ -127,9 +127,9 @@ test('syncPerformanceDoc maps writeFile reports to write-file docs', (t) => {
     docPath,
     [
       'before',
-      '<!-- rush-fs-perf:start writeFile -->',
+      '{/* rush-fs-perf:start writeFile */}',
       'old generated content',
-      '<!-- rush-fs-perf:end writeFile -->',
+      '{/* rush-fs-perf:end writeFile */}',
       'after',
     ].join('\n'),
   )
@@ -165,9 +165,9 @@ test('syncPerformanceDoc maps stat reports to stat docs', (t) => {
     docPath,
     [
       'before',
-      '<!-- rush-fs-perf:start stat -->',
+      '{/* rush-fs-perf:start stat */}',
       'old generated content',
-      '<!-- rush-fs-perf:end stat -->',
+      '{/* rush-fs-perf:end stat */}',
       'after',
     ].join('\n'),
   )
@@ -203,9 +203,9 @@ test('syncPerformanceDoc maps lstat reports to lstat docs', (t) => {
     docPath,
     [
       'before',
-      '<!-- rush-fs-perf:start lstat -->',
+      '{/* rush-fs-perf:start lstat */}',
       'old generated content',
-      '<!-- rush-fs-perf:end lstat -->',
+      '{/* rush-fs-perf:end lstat */}',
       'after',
     ].join('\n'),
   )
@@ -241,9 +241,9 @@ test('syncPerformanceDoc maps copyFile reports to copy-file docs', (t) => {
     docPath,
     [
       'before',
-      '<!-- rush-fs-perf:start copyFile -->',
+      '{/* rush-fs-perf:start copyFile */}',
       'old generated content',
-      '<!-- rush-fs-perf:end copyFile -->',
+      '{/* rush-fs-perf:end copyFile */}',
       'after',
     ].join('\n'),
   )

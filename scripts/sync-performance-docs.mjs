@@ -26,7 +26,7 @@ function formatBytes(value) {
 }
 
 function marker(api, side) {
-  return `<!-- rush-fs-perf:${side} ${api} -->`
+  return `{/* rush-fs-perf:${side} ${api} */}`
 }
 
 function selectComparisons(report, api) {
