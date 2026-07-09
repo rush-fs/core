@@ -4,7 +4,7 @@ env:
   APP_NAME: rush-fs
   MACOSX_DEPLOYMENT_TARGET: '10.13'
   CARGO_INCREMENTAL: '1'
-  NODE_VERSION: '22'
+  NODE_VERSION: '24'
 # CI：PR 与 main 的检查（lint / build / test），不包含发布
 'on':
   push:
