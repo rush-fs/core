@@ -10,7 +10,7 @@ env:
   APP_NAME: rush-fs
   MACOSX_DEPLOYMENT_TARGET: '10.13'
   CARGO_INCREMENTAL: '1'
-  NODE_VERSION: '20'
+  NODE_VERSION: '24'
 on:
   workflow_dispatch:
     inputs:
